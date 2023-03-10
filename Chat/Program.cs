@@ -22,6 +22,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthorization();
 
+app.UseCors(builder =>
+{
+    builder.WithOrigins("http://127.0.0.1:5500")
+        .AllowAnyHeader()
+        .WithMethods("GET", "POST")
+        .AllowCredentials();
+});
+
 app.MapControllers();
 app.MapHub<ChatHub>("/chatHub");
 

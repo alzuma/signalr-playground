@@ -7,7 +7,6 @@ public class ChatRoom
     public string RoomName { get; set; }
     public List<string> ConnectedClients { get; set; } = new();
     public List<string> MessageHistory { get; set; } = new();
-
 }
 
 public class ChatHub : Hub
@@ -18,6 +17,19 @@ public class ChatHub : Hub
     {
         _chatRooms = chatRooms;
     }
+
+    public override async Task OnConnectedAsync()
+    {
+        await JoinRoom("Default");
+        await base.OnConnectedAsync();
+    }
+    
+    public override async Task OnDisconnectedAsync(Exception exception)
+    {
+        //remove from rooms
+        await base.OnDisconnectedAsync(exception);
+    }
+
 
     public async Task JoinRoom(string roomName)
     {
@@ -36,7 +48,7 @@ public class ChatHub : Hub
         chatRoom.ConnectedClients.Add(connectionId);
 
         await Groups.AddToGroupAsync(connectionId, roomName);
-        
+
         if (chatRoom.MessageHistory.Count > 0)
         {
             await Clients.Caller.SendAsync("ReceiveMessageHistory", chatRoom.MessageHistory);
@@ -68,7 +80,7 @@ public class ChatHub : Hub
     public async Task SendMessage(string roomName, string message)
     {
         var connectionId = Context.ConnectionId;
-        
+
         var chatRoom = _chatRooms.FirstOrDefault(x => x.RoomName == roomName);
         if (chatRoom != null)
         {
